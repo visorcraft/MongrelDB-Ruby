@@ -27,6 +27,7 @@ No external gems required at runtime — built on the standard-library `net/http
 - **Idempotent batch transactions** — operations staged locally and committed atomically, with the engine enforcing unique, foreign-key, and check constraints at commit time. Idempotency keys return the original response on duplicate commits, even after a crash.
 - **Full SQL access** through the DataFusion-backed `/sql` endpoint: recursive CTEs, window functions, `CREATE TABLE AS SELECT`, materialized views, and multi-statement execution.
 - **Schema management**: typed table creation, full schema catalog, and per-table descriptors.
+- **User/role/credentials management** via SQL: Argon2id-hashed catalog users, roles, and `GRANT`/`REVOKE` table-level permissions, all executed through `sql`.
 - **Maintenance**: compaction (all tables or per-table).
 - **Auth**: Bearer token (`--auth-token` mode) and HTTP Basic (`--auth-users` mode), with the bearer token taking precedence.
 - **Typed exception hierarchy**: `MongrelDBError` (base), `AuthError` (401/403), `NotFoundError` (404), `ConflictError` (409, with error code + op index), and `QueryError` (everything else, including network failures).
@@ -45,6 +46,17 @@ gem "mongreldb"
 ```
 
 Then `bundle install`.
+
+## Examples
+
+Task-focused, commented guides live in [`docs/`](docs):
+
+- [Quickstart](docs/quickstart.md) — install, start the daemon, write and run a complete program.
+- [Transactions](docs/transactions.md) — batch commits, idempotency keys, constraint handling.
+- [Queries](docs/queries.md) — every native condition type and the index it pushes down to.
+- [SQL](docs/sql.md) — recursive CTEs, window functions, advanced SQL.
+- [Authentication](docs/auth.md) — Bearer token, HTTP Basic, and open modes.
+- [Errors](docs/errors.md) — the exception hierarchy and recovery patterns.
 
 ## Quick Example
 
@@ -95,7 +107,7 @@ db = MongrelDB::Client.new(url: "http://127.0.0.1:8453",
 db = MongrelDB::Client.new
 ```
 
-## Transactions
+## Batch transactions
 
 Operations are staged locally and committed atomically. The engine enforces
 unique, foreign-key, and check constraints at commit time.
@@ -163,6 +175,23 @@ db.sql("CREATE TABLE archive AS SELECT * FROM orders WHERE amount > 500")
 # Recursive CTEs and window functions.
 db.sql("WITH RECURSIVE r(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM r WHERE n<10) SELECT n FROM r")
 db.sql("SELECT id, ROW_NUMBER() OVER (PARTITION BY customer ORDER BY amount DESC) FROM orders")
+```
+
+## User & role management
+
+User, role, and permission management is performed through SQL against the
+daemon's catalog. Passwords are Argon2id-hashed server-side.
+
+```ruby
+db.sql("CREATE USER admin WITH PASSWORD 's3cret-pw'")
+db.sql("ALTER USER admin SET ADMIN TRUE")
+
+db.sql("CREATE ROLE analyst")
+db.sql("GRANT select ON orders TO analyst") # table-level permission
+db.sql("GRANT analyst TO alice")
+
+db.sql("SELECT username FROM catalog.users") # list users
+db.sql("SELECT name FROM catalog.roles")     # list roles
 ```
 
 ## Error handling
