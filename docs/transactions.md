@@ -1,8 +1,8 @@
 # Transactions
 
 MongrelDB commits every write through a single atomic transaction endpoint
-(`POST /kit/txn`). This guide covers the two ways to use it — a one-shot
-single op, and a staged batch — plus idempotency keys for safe retries, typed
+(`POST /kit/txn`). This guide covers the two ways to use it - a one-shot
+single op, and a staged batch - plus idempotency keys for safe retries, typed
 constraint-violation handling, and rollback.
 
 The engine enforces `UNIQUE`, foreign-key, check, and trigger constraints at
@@ -45,7 +45,7 @@ puts "committed #{results.length} ops"
 ```
 
 The `returning:` keyword on `Transaction#put` asks the daemon to echo the
-written row back in the result — useful for reading server-assigned values.
+written row back in the result - useful for reading server-assigned values.
 
 ```ruby
 txn = db.begin_transaction
@@ -85,7 +85,7 @@ Rules for keys:
 
 - Any non-empty string works. Prefer content-derived, globally-unique values
   (e.g. `"charge:#{order_id}"`).
-- `nil` (the default) disables idempotency — a retry will commit again.
+- `nil` (the default) disables idempotency - a retry will commit again.
 - The key scopes the **entire batch**, not individual ops. Reuse the exact
   same ops and key together when retrying.
 
@@ -98,9 +98,9 @@ def commit_with_retry(db, build_txn, key, max_attempts: 3)
     txn = build_txn.call(db)
     return txn.commit(idempotency_key: key)
   rescue MongrelDB::ConflictError, MongrelDB::AuthError
-    raise # not transient — surface to the caller
+    raise # not transient - surface to the caller
   rescue MongrelDB::MongrelDBError => e
-    # QueryError / network — the idempotency key makes it safe to retry.
+    # QueryError / network - the idempotency key makes it safe to retry.
     raise e if attempt == max_attempts - 1
     sleep(1 << attempt)
   end

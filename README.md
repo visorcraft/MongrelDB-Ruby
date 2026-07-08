@@ -1,8 +1,8 @@
 # MongrelDB Ruby Client
 
-MongrelDB Ruby Client is the pure-Ruby application-facing client for [MongrelDB](https://www.MongrelDB.com). It gives Ruby 3.0+ applications a typed CRUD surface, a fluent query builder that pushes conditions down to MongrelDB's native indexes, idempotent batch transactions, full SQL access, schema introspection, and maintenance operations — all over HTTP to a running `mongreldb-server` daemon.
+MongrelDB Ruby Client is the pure-Ruby application-facing client for [MongrelDB](https://www.MongrelDB.com). It gives Ruby 3.0+ applications a typed CRUD surface, a fluent query builder that pushes conditions down to MongrelDB's native indexes, idempotent batch transactions, full SQL access, schema introspection, and maintenance operations - all over HTTP to a running `mongreldb-server` daemon.
 
-No external gems required at runtime — built on the standard-library `net/http`. The API mirrors the MongrelDB PHP, Go, and Java clients.
+No external gems required at runtime - built on the standard-library `net/http`. The API mirrors the MongrelDB PHP, Go, and Java clients.
 
 [![Gem Version](https://img.shields.io/gem/v/mongreldb.svg)](https://rubygems.org/gems/mongreldb)
 [![Ruby](https://img.shields.io/badge/Ruby-%3E%3D3.0-CC342D.svg)](https://www.ruby-lang.org/)
@@ -24,7 +24,7 @@ No external gems required at runtime — built on the standard-library `net/http
 
 - **Typed CRUD** over the Kit transaction endpoint: `put`, `upsert` (insert-or-update on PK conflict), `delete` by row id or primary key, all with optional idempotency keys for safe retries.
 - **Fluent query builder** that pushes conditions down to the engine's specialized indexes for sub-millisecond lookups: bitmap equality/IN, learned-range, null checks, FM-index full-text search, HNSW vector similarity (`ann`), and sparse vector match. Friendly aliases (`column` → `column_id`, `min`/`max` → `lo`/`hi`) are translated to the server's on-wire keys.
-- **Idempotent batch transactions** — operations staged locally and committed atomically, with the engine enforcing unique, foreign-key, and check constraints at commit time. Idempotency keys return the original response on duplicate commits, even after a crash.
+- **Idempotent batch transactions** - operations staged locally and committed atomically, with the engine enforcing unique, foreign-key, and check constraints at commit time. Idempotency keys return the original response on duplicate commits, even after a crash.
 - **Full SQL access** through the DataFusion-backed `/sql` endpoint: recursive CTEs, window functions, `CREATE TABLE AS SELECT`, materialized views, and multi-statement execution.
 - **Schema management**: typed table creation, full schema catalog, and per-table descriptors.
 - **User/role/credentials management** via SQL: Argon2id-hashed catalog users, roles, and `GRANT`/`REVOKE` table-level permissions, all executed through `sql`.
@@ -51,12 +51,12 @@ Then `bundle install`.
 
 Task-focused, commented guides live in [`docs/`](docs):
 
-- [Quickstart](docs/quickstart.md) — install, start the daemon, write and run a complete program.
-- [Transactions](docs/transactions.md) — batch commits, idempotency keys, constraint handling.
-- [Queries](docs/queries.md) — every native condition type and the index it pushes down to.
-- [SQL](docs/sql.md) — recursive CTEs, window functions, advanced SQL.
-- [Authentication](docs/auth.md) — Bearer token, HTTP Basic, and open modes.
-- [Errors](docs/errors.md) — the exception hierarchy and recovery patterns.
+- [Quickstart](docs/quickstart.md) - install, start the daemon, write and run a complete program.
+- [Transactions](docs/transactions.md) - batch commits, idempotency keys, constraint handling.
+- [Queries](docs/queries.md) - every native condition type and the index it pushes down to.
+- [SQL](docs/sql.md) - recursive CTEs, window functions, advanced SQL.
+- [Authentication](docs/auth.md) - Bearer token, HTTP Basic, and open modes.
+- [Errors](docs/errors.md) - the exception hierarchy and recovery patterns.
 
 ## Quick Example
 
@@ -119,14 +119,14 @@ txn.put("orders", { 1 => 11, 2 => "Eve",  3 => 75.00 })
 txn.delete_by_pk("orders", 2)
 
 begin
-  results = txn.commit              # atomic — all or nothing
+  results = txn.commit              # atomic - all or nothing
   puts "Staged #{txn.count} operations"
 rescue MongrelDB::ConflictError => e
   puts "Constraint violated: #{e.error_code} - #{e.message}"
   txn.rollback
 end
 
-# Idempotent commit — safe to retry; the daemon returns the original response.
+# Idempotent commit - safe to retry; the daemon returns the original response.
 txn2 = db.begin_transaction
 txn2.put("orders", { 1 => 20, 2 => "Frank", 3 => 100.00 })
 txn2.commit(idempotency_key: "order-20-create")
@@ -268,7 +268,7 @@ end
 
 | Class | HTTP status | Notes |
 |-------|-------------|-------|
-| `MongrelDB::MongrelDBError` | — | Base class for all client errors |
+| `MongrelDB::MongrelDBError` | - | Base class for all client errors |
 | `MongrelDB::AuthError` | 401, 403 | Bad or missing credentials |
 | `MongrelDB::NotFoundError` | 404 | Missing table, schema, or resource |
 | `MongrelDB::ConflictError` | 409 | Constraint violation; carries `error_code` and `op_index` |
@@ -278,10 +278,10 @@ end
 
 The test suite uses Minitest. It is split into two layers:
 
-- **Offline unit tests** — exception hierarchy, query-builder alias
+- **Offline unit tests** - exception hierarchy, query-builder alias
   translation, cells flattening, and an in-process stub for auth/transport
   checks. No daemon needed.
-- **Live integration tests** — boots a real `mongreldb-server` daemon and
+- **Live integration tests** - boots a real `mongreldb-server` daemon and
   exercises the full client surface. Skips automatically when no binary is
   available.
 
@@ -311,7 +311,7 @@ already-running daemon with `MONGRELDB_URL`.
 Contributions are welcome. Please:
 
 1. Open an issue first for non-trivial changes.
-2. Add focused tests near your change — the suite must stay green.
+2. Add focused tests near your change - the suite must stay green.
 3. Run `bundle exec rake test` before submitting.
 4. Keep the client dependency-free (standard library only at runtime).
 

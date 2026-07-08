@@ -32,7 +32,7 @@ jobs:
 
       - name: Verify gemspec
         # `require` can't load a .gemspec (it only resolves .rb files), so
-        # build the gem instead — this both parses and validates the gemspec.
+        # build the gem instead - this both parses and validates the gemspec.
         run: gem build mongreldb.gemspec
 
       # The offline unit tests (exception hierarchy, query-builder alias

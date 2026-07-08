@@ -65,7 +65,7 @@ Network and encoding problems (`Errno::ECONNREFUSED`, `Net::ReadTimeout`,
 
 ## Discriminating errors
 
-### By category — rescue the subclass
+### By category - rescue the subclass
 
 ```ruby
 begin
@@ -83,7 +83,7 @@ rescue MongrelDB::MongrelDBError => e
 end
 ```
 
-### By details — read `ConflictError` fields
+### By details - read `ConflictError` fields
 
 ```ruby
 begin
@@ -95,7 +95,7 @@ end
 
 ## Recovery patterns
 
-### Auth failure — do not retry blindly
+### Auth failure - do not retry blindly
 
 A retry will not fix bad credentials. Surface the error to the caller or
 operator.
@@ -106,7 +106,7 @@ rescue MongrelDB::AuthError => e
 end
 ```
 
-### Not found — fall back, do not crash
+### Not found - fall back, do not crash
 
 For lookups by primary key, a 404 may be a normal "absent" result.
 
@@ -114,14 +114,14 @@ For lookups by primary key, a 404 may be a normal "absent" result.
 begin
   db.schema_for(table_name)
 rescue MongrelDB::NotFoundError
-  return {} # table missing — treat as empty
+  return {} # table missing - treat as empty
 end
 ```
 
 Note: a `pk` query against an existing table returns zero rows, not a 404;
 `NotFoundError` here means the table itself is missing.
 
-### Constraint conflict — report the offending op
+### Constraint conflict - report the offending op
 
 ```ruby
 begin
@@ -136,9 +136,9 @@ rescue MongrelDB::ConflictError => e
 end
 ```
 
-The engine already rolled back the whole batch — there is nothing to undo.
+The engine already rolled back the whole batch - there is nothing to undo.
 
-### Transient failure — retry with an idempotency key
+### Transient failure - retry with an idempotency key
 
 `QueryError` covers transport and 5xx failures. With an idempotency key,
 retrying a transaction is safe (see [transactions.md](transactions.md)).
@@ -150,14 +150,14 @@ def run(db, build_txn, key)
 rescue MongrelDB::AuthError, MongrelDB::ConflictError
   raise # not transient
 rescue MongrelDB::MongrelDBError
-  raise # QueryError / network — caller may retry with the same key
+  raise # QueryError / network - caller may retry with the same key
 end
 ```
 
 ### Transaction-state error
 
 Calling `commit` or `rollback` twice on the same `Transaction` raises
-`RuntimeError`. That is a programming bug — fix the control flow rather than
+`RuntimeError`. That is a programming bug - fix the control flow rather than
 catching it.
 
 ## Quick reference
@@ -180,5 +180,5 @@ end
 
 ## Next steps
 
-- [transactions.md](transactions.md) — constraint handling and retries in context
-- [auth.md](auth.md) — credential management
+- [transactions.md](transactions.md) - constraint handling and retries in context
+- [auth.md](auth.md) - credential management

@@ -1,4 +1,4 @@
-# MongrelDB Ruby Client — Guides
+# MongrelDB Ruby Client - Guides
 
 Task-focused guides for the pure-Ruby MongrelDB HTTP client. For the full API
 surface in one place, see the root [README](../README.md).
