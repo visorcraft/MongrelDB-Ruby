@@ -1,13 +1,21 @@
-# MongrelDB Ruby Client
+<p align="center">
+  <img src="assets/mongrel.png" alt="MongrelDB logo" width="250" />
+</p>
 
-MongrelDB Ruby Client is the pure-Ruby application-facing client for [MongrelDB](https://www.MongrelDB.com). It gives Ruby 3.0+ applications a typed CRUD surface, a fluent query builder that pushes conditions down to MongrelDB's native indexes, idempotent batch transactions, full SQL access, schema introspection, and maintenance operations - all over HTTP to a running `mongreldb-server` daemon.
+<h1 align="center">MongrelDB Ruby Client</h1>
 
-No external gems required at runtime - built on the standard-library `net/http`. The API mirrors the MongrelDB PHP, Go, and Java clients.
+<p align="center">
+  <b>Pure Ruby client for MongrelDB - embedded+server database with SQL, vector search, full-text search, and AI-native retrieval.</b>
+  <br />
+  No external gems required at runtime - built on the standard-library <code>net/http</code>. The API mirrors the MongrelDB PHP, Go, and Java clients.
+</p>
 
-[![Gem Version](https://img.shields.io/gem/v/mongreldb.svg)](https://rubygems.org/gems/mongreldb)
-[![Ruby](https://img.shields.io/badge/Ruby-%3E%3D3.0-CC342D.svg)](https://www.ruby-lang.org/)
-[![CI](https://github.com/visorcraft/MongrelDB-Ruby/actions/workflows/ci.yml/badge.svg)](https://github.com/visorcraft/MongrelDB-Ruby/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
+<p align="center">
+  <a href="https://rubygems.org/gems/mongreldb"><img src="https://img.shields.io/gem/v/mongreldb.svg" alt="Gem Version" /></a>
+  <a href="https://www.ruby-lang.org/"><img src="https://img.shields.io/badge/Ruby-%3E%3D3.0-CC342D.svg" alt="Ruby" /></a>
+  <a href="https://github.com/visorcraft/MongrelDB-Ruby/actions/workflows/ci.yml"><img src="https://github.com/visorcraft/MongrelDB-Ruby/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="#license"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg" alt="License" /></a>
+</p>
 
 ## Package
 
