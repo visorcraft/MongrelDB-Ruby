@@ -1,0 +1,27 @@
+# Agent / assistant instruction files are workspace-local, never published
+AGENTS.md
+CLAUDE.md
+.cursorrules
+.zcode/
+
+# Logs
+*.log
+
+# OS / editor state
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Ruby
+Gemfile.lock
+coverage/
+*.gem
+pkg/
+.bundle/
+
+# Prebuilt mongreldb-server binary (downloaded by CI / local testing, not source)
+bin/
