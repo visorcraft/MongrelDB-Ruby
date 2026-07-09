@@ -79,6 +79,13 @@ jobs:
       - name: Run live tests
         run: bundle exec rake test
 
+      - name: Run examples
+        run: |
+          for ex in examples/*.rb; do
+            echo "=== Running $ex ==="
+            ruby -Ilib "$ex" || { echo "FAILED: $ex"; exit 1; }
+          done
+
       - name: Dump server log on failure
         if: failure()
         run: |
