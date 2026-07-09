@@ -159,7 +159,7 @@ module MongrelDB
     #
     # @param name [String] Table name.
     def drop_table(name)
-      delete("/tables/#{url_path_escape(name)}")
+      http_delete("/tables/#{url_path_escape(name)}")
       nil
     end
 
@@ -169,7 +169,11 @@ module MongrelDB
     # @return [Integer] Row count.
     def count(table)
       data = get("/tables/#{url_path_escape(table)}/count").json
-      (data.is_a?(Hash) ? data["count"] : nil) || 0
+      if data.is_a?(Hash) && data["count"].is_a?(Integer)
+        data["count"]
+      else
+        raise MongrelDB::QueryError, "malformed count response from server"
+      end
     end
 
     # ── CRUD (via the Kit typed transaction endpoint) ────────────────────────
@@ -342,7 +346,9 @@ module MongrelDB
     end
 
     # Perform a DELETE request and return the {Response}.
-    def delete(path)
+    # (Renamed from +delete+ to avoid clobbering the typed CRUD method
+    # Client#delete(table, row_id) defined above.)
+    def http_delete(path)
       request(Net::HTTP::Delete, path)
     end
 
@@ -505,10 +511,11 @@ module MongrelDB
       [body, nil, nil]
     end
 
-    # Percent-escape a path segment (table names may contain characters unsafe
-    # in a URL). Does not escape the forward slash.
+    # Percent-escape a path segment so table names containing '/', '?', '#',
+    # or spaces cannot inject extra segments or break routing. Only RFC 3986
+    # unreserved characters pass through unescaped.
     def url_path_escape(segment)
-      segment.to_s.gsub(/[^\/A-Za-z0-9\-_.~]/) do |match|
+      segment.to_s.gsub(/[^A-Za-z0-9\-_.~]/) do |match|
         match.bytes.map { |b| format("%%%02X", b) }.join
       end
     end
