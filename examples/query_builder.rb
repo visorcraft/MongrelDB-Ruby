@@ -1,0 +1,55 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+#
+# Example: query builder conditions with the MongrelDB Ruby client.
+#
+# Run: ruby examples/query_builder.rb
+# Requires: mongreldb-server running on http://127.0.0.1:8453
+#
+# Creates a table, inserts five rows with varying scores, then uses the native
+# query builder to fetch rows by a range condition and by an exact primary-key
+# match. Cleans up by dropping the table.
+
+require "mongreldb"
+
+URL = "http://127.0.0.1:8453"
+TABLE = "example_query"
+
+db = MongrelDB::Client.new(URL)
+
+unless db.health
+  warn "daemon not reachable at #{URL}"
+  exit 1
+end
+puts "Connected to MongrelDB"
+
+db.create_table(TABLE, [
+  { "id" => 1, "name" => "id", "ty" => "int64", "primary_key" => true, "nullable" => false },
+  { "id" => 2, "name" => "name", "ty" => "varchar", "primary_key" => false, "nullable" => false },
+  { "id" => 3, "name" => "score", "ty" => "float64", "primary_key" => false, "nullable" => false },
+])
+puts "Created table #{TABLE}"
+
+# Five rows with varying scores.
+db.put(TABLE, 1 => 1, 2 => "Alice", 3 => 40.0)
+db.put(TABLE, 1 => 2, 2 => "Bob", 3 => 65.0)
+db.put(TABLE, 1 => 3, 2 => "Carol", 3 => 82.0)
+db.put(TABLE, 1 => 4, 2 => "Dave", 3 => 91.0)
+db.put(TABLE, 1 => 5, 2 => "Eve", 3 => 12.5)
+puts "Inserted 5 rows"
+
+# Range condition: scores in [60.0, 90.0]. "column" maps to column_id, so pass
+# the numeric column id (3), not the name.
+rng = db.query(TABLE)
+  .where("range", "column" => 3, "min" => 60.0, "max" => 90.0)
+  .execute
+puts "Range query (score in [60,90]) returned #{rng.length} rows:"
+rng.each { |row| puts "  #{row.inspect}" }
+
+# Primary-key condition: fetch the single row with id == 4.
+pk = db.query(TABLE).where("pk", "value" => 4).execute
+puts "PK query (id == 4) returned #{pk.length} rows:"
+pk.each { |row| puts "  #{row.inspect}" }
+
+db.drop_table(TABLE)
+puts "Dropped table #{TABLE}"
