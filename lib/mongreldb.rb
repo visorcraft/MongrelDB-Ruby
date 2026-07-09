@@ -28,6 +28,11 @@ module MongrelDB
   # Default daemon address used when none is supplied.
   DEFAULT_BASE_URL = "http://127.0.0.1:8453"
 
+  # Maximum response body size (256 MB). Bodies larger than this are aborted
+  # with a {QueryError} to guard client memory against a malicious or buggy
+  # server.
+  MAX_RESPONSE_BYTES = 268_435_456
+
   # Base class for every error raised by the client. Rescue this to catch any
   # MongrelDB failure (network, auth, not-found, conflict, query).
   class MongrelDBError < StandardError
@@ -242,24 +247,20 @@ module MongrelDB
 
     # ── SQL ──────────────────────────────────────────────────────────────────
 
-    # Execute a SQL statement via the +/sql+ endpoint. When the daemon returns
-    # a JSON result set the rows are decoded and returned; for statements that
-    # yield no rows (DDL/DML) or a non-JSON (Arrow IPC) body, an empty array is
-    # returned.
+    # Execute a SQL statement via the +/sql+ endpoint, requesting JSON output.
+    # The server returns a JSON array of row objects keyed by column name, e.g.
+    # +[{"id" => 1, "name" => "Alice", "score" => 95.5}]+. For statements that
+    # yield no rows (DDL/DML), an empty array is returned.
     #
     # @param sql [String] SQL statement.
     # @return [Array<Hash{String=>Object}>] Result rows (empty when none).
     def sql(sql)
-      response = post("/sql", "sql" => sql)
+      response = post("/sql", "sql" => sql, "format" => "json")
       body = response.body.to_s
       trimmed = body.lstrip
       return [] if trimmed.empty?
 
-      # The /sql endpoint generally streams Arrow IPC bytes for SELECTs; only
-      # decode when the body is actually JSON to avoid noise.
-      first = trimmed[0]
-      return [] unless first == "{" || first == "["
-
+      # Requested format is JSON; decode the array of row objects.
       parsed = JSON.parse(body)
       parsed.is_a?(Array) ? parsed : []
     rescue JSON::ParserError
@@ -389,6 +390,10 @@ module MongrelDB
 
       response = perform(uri, req)
       resp = Response.new(status: response.code.to_i, body: response.body)
+      if resp.body && resp.body.bytesize > MAX_RESPONSE_BYTES
+        raise QueryError,
+              "Response body exceeds maximum size of #{MAX_RESPONSE_BYTES} bytes"
+      end
       return resp if resp.success?
 
       throw_for_status(resp.status, resp.body)

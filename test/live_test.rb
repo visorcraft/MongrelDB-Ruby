@@ -194,6 +194,16 @@ module MongrelDB
         client.create_table(name, columns)
       end
 
+      # Extract a column value from a Kit row's flat +cells+ array
+      # (shape: +[col_id, value, col_id, value, ...]+).
+      def cell_value(cells, col_id)
+        return nil unless cells.is_a?(Array)
+        cells.each_slice(2) do |id, val|
+          return val if id == col_id
+        end
+        nil
+      end
+
       # Skip the test when the suite was unable to boot a daemon.
       def skip_if_no_client!
         skip "no mongreldb-server available" if Daemon.client.nil?
@@ -263,6 +273,12 @@ class MongrelDB::LiveFullLifecycleTest < MongrelDB::LiveTestCase
     # Second upsert on the same PK updates (still one row).
     client.upsert(name, {1 => 1, 2 => 120.0}, update_cells: { 2 => 120.0 })
     assert_equal 1, client.count(name)
+
+    # Query by PK and assert the updated cell value.
+    rows = client.query(name).where("pk", "value" => 1).execute
+    assert_equal 1, rows.length
+    assert_equal 1, cell_value(rows.first["cells"], 1)
+    assert_equal 120.0, cell_value(rows.first["cells"], 2)
   end
 
   def test_query_by_primary_key
@@ -275,6 +291,8 @@ class MongrelDB::LiveFullLifecycleTest < MongrelDB::LiveTestCase
 
     rows = client.query(name).where("pk", "value" => 42).execute
     assert_equal 1, rows.length
+    # The returned row must carry the queried PK value.
+    assert_equal 42, cell_value(rows.first["cells"], 1)
   end
 
   def test_query_range_with_friendly_aliases
@@ -289,8 +307,17 @@ class MongrelDB::LiveFullLifecycleTest < MongrelDB::LiveTestCase
     # Range predicate using friendly aliases (column/min/max -> column_id/lo/hi).
     q = client.query(name).where("range", "column" => 2, "min" => 100, "max" => 150)
     rows = q.execute
-    assert_operator rows.length, :>=, 1
+    # Only the row with amount=120 (pk=2) falls in [100, 150].
+    assert_equal 1, rows.length
     refute q.truncated
+    # Verify the PK and amount values of returned rows match the filter range.
+    rows.each do |row|
+      cells = row["cells"]
+      assert_equal 2, cell_value(cells, 1), "expected returned pk 2"
+      amt = cell_value(cells, 2)
+      assert_operator amt, :>=, 100
+      assert_operator amt, :<=, 150
+    end
   end
 
   def test_query_projection_and_limit
@@ -393,20 +420,20 @@ class MongrelDB::LiveFullLifecycleTest < MongrelDB::LiveTestCase
     refute_includes client.table_names, name
   end
 
-  def test_sql_runs_without_error
-    skip_if_no_client!
-    # SELECT 1 yields no JSON rows (the daemon streams Arrow IPC); we just
-    # assert it runs without error.
-    assert_kind_of Array, client.sql("SELECT 1")
-  end
-
-  def test_sql_insert_round_trip_via_count
+  def test_sql_insert_increases_count_and_select_returns_row
     skip_if_no_client!
     name = unique_table("rb_sql")
     fresh_table(name, int_col(1, "id", primary_key: true), float_col(2, "amount"))
 
+    assert_equal 0, client.count(name)
+    # INSERT via SQL must increase the row count.
     client.sql("INSERT INTO #{name} (id, amount) VALUES (77, 7.5)")
     assert_equal 1, client.count(name)
+
+    # JSON SQL mode must return the inserted row.
+    rows = client.sql("SELECT id, amount FROM #{name}")
+    assert_equal 1, rows.length
+    assert_equal 77, rows.first["id"]
   end
 
   def test_schema_includes_created_table
