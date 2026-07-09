@@ -22,7 +22,7 @@ jobs:
         ruby: ['3.0', '3.3']
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Ruby ${{ matrix.ruby }}
         uses: ruby/setup-ruby@v1
@@ -52,7 +52,7 @@ jobs:
       MONGRELDB_SERVER: ./bin/mongreldb-server
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -62,7 +62,7 @@ jobs:
 
       - name: Cache mongreldb-server binary
         id: server-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: bin/mongreldb-server
           key: mongreldb-server-linux-x64-${{ env.SERVER_VERSION }}
