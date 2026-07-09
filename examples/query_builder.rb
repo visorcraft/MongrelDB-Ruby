@@ -15,7 +15,7 @@ require "mongreldb"
 URL = "http://127.0.0.1:8453"
 TABLE = "example_query"
 
-db = MongrelDB::Client.new(URL)
+db = MongrelDB::Client.new(url: URL)
 
 unless db.health
   warn "daemon not reachable at #{URL}"
@@ -30,18 +30,24 @@ db.create_table(TABLE, [
 ])
 puts "Created table #{TABLE}"
 
-# Five rows with varying scores.
-db.put(TABLE, 1 => 1, 2 => "Alice", 3 => 40.0)
-db.put(TABLE, 1 => 2, 2 => "Bob", 3 => 65.0)
-db.put(TABLE, 1 => 3, 2 => "Carol", 3 => 82.0)
-db.put(TABLE, 1 => 4, 2 => "Dave", 3 => 91.0)
-db.put(TABLE, 1 => 5, 2 => "Eve", 3 => 12.5)
+# Five rows with varying scores. Wrap the cells in braces: Client#put takes
+# keyword args (idempotency_key:), and Ruby 3 treats a trailing braceless hash
+# ambiguously with keyword args.
+db.put(TABLE, { 1 => 1, 2 => "Alice", 3 => 40.0 })
+db.put(TABLE, { 1 => 2, 2 => "Bob", 3 => 65.0 })
+db.put(TABLE, { 1 => 3, 2 => "Carol", 3 => 82.0 })
+db.put(TABLE, { 1 => 4, 2 => "Dave", 3 => 91.0 })
+db.put(TABLE, { 1 => 5, 2 => "Eve", 3 => 12.5 })
 puts "Inserted 5 rows"
 
 # Range condition: scores in [60.0, 90.0]. "column" maps to column_id, so pass
-# the numeric column id (3), not the name.
+# the numeric column id (3), not the name. The "score" column is float64, so use
+# the range_f64 condition (plain "range" expects an i64 bound and rejects
+# floats); range_f64 also requires the inclusivity flags (min_inclusive/
+# max_inclusive -> lo_inclusive/hi_inclusive).
 rng = db.query(TABLE)
-  .where("range", "column" => 3, "min" => 60.0, "max" => 90.0)
+  .where("range_f64", "column" => 3, "min" => 60.0, "max" => 90.0,
+                       "min_inclusive" => true, "max_inclusive" => true)
   .execute
 puts "Range query (score in [60,90]) returned #{rng.length} rows:"
 rng.each { |row| puts "  #{row.inspect}" }

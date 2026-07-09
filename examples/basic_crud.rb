@@ -15,7 +15,7 @@ require "mongreldb"
 URL = "http://127.0.0.1:8453"
 TABLE = "example_crud"
 
-db = MongrelDB::Client.new(URL)
+db = MongrelDB::Client.new(url: URL)
 
 # Health check; bail out if the daemon is unreachable.
 unless db.health
@@ -32,10 +32,12 @@ tid = db.create_table(TABLE, [
 ])
 puts "Created table #{TABLE} (id #{tid})"
 
-# Insert three rows. Cells map column id -> value.
-db.put(TABLE, 1 => 1, 2 => "Alice", 3 => 95.5)
-db.put(TABLE, 1 => 2, 2 => "Bob", 3 => 82.0)
-db.put(TABLE, 1 => 3, 2 => "Carol", 3 => 78.3)
+# Insert three rows. Cells map column id -> value. Wrap the cells in braces:
+# Client#put takes keyword args (idempotency_key:), and Ruby 3 treats a trailing
+# braceless hash ambiguously with keyword args.
+db.put(TABLE, { 1 => 1, 2 => "Alice", 3 => 95.5 })
+db.put(TABLE, { 1 => 2, 2 => "Bob", 3 => 82.0 })
+db.put(TABLE, { 1 => 3, 2 => "Carol", 3 => 78.3 })
 puts "Inserted 3 rows"
 
 puts "Total rows: #{db.count(TABLE)}"
@@ -47,7 +49,7 @@ all.each { |row| puts "  #{row.inspect}" }
 
 # Upsert (update) Alice's score. update_cells supplies the values written on a
 # primary-key conflict.
-db.upsert(TABLE, 1 => 1, 2 => "Alice", 3 => 100.0, update_cells: { 2 => "Alice", 3 => 100.0 })
+db.upsert(TABLE, { 1 => 1, 2 => "Alice", 3 => 100.0 }, update_cells: { 2 => "Alice", 3 => 100.0 })
 puts "Upserted Alice's score to 100.0"
 puts "Total rows after upsert: #{db.count(TABLE)}"
 

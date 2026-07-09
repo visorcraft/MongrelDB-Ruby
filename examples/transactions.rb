@@ -16,7 +16,7 @@ require "mongreldb"
 URL = "http://127.0.0.1:8453"
 TABLE = "example_txn"
 
-db = MongrelDB::Client.new(URL)
+db = MongrelDB::Client.new(url: URL)
 
 unless db.health
   warn "daemon not reachable at #{URL}"
@@ -34,9 +34,11 @@ puts "Created table #{TABLE}"
 # Stage three puts and commit them atomically. Either every op lands or none
 # do; a constraint violation rolls back the whole batch.
 txn = db.begin_transaction
-txn.put(TABLE, 1 => 1, 2 => "Alice", 3 => 95.5)
-txn.put(TABLE, 1 => 2, 2 => "Bob", 3 => 82.0)
-txn.put(TABLE, 1 => 3, 2 => "Carol", 3 => 78.3)
+# Wrap the cells in braces: Transaction#put takes keyword args (returning:),
+# and Ruby 3 treats a trailing braceless hash ambiguously with keyword args.
+txn.put(TABLE, { 1 => 1, 2 => "Alice", 3 => 95.5 })
+txn.put(TABLE, { 1 => 2, 2 => "Bob", 3 => 82.0 })
+txn.put(TABLE, { 1 => 3, 2 => "Carol", 3 => 78.3 })
 puts "Staged #{txn.count} operations"
 
 results = txn.commit
@@ -48,12 +50,12 @@ puts "Verified row count after commit: #{db.count(TABLE)}"
 # commit a second time with the SAME key. The daemon replays the original
 # result and applies no extra rows.
 retry_txn = db.begin_transaction
-retry_txn.put(TABLE, 1 => 4, 2 => "Dave", 3 => 60.0)
+retry_txn.put(TABLE, { 1 => 4, 2 => "Dave", 3 => 60.0 })
 retry_txn.commit(idempotency_key: "example-txn-key")
 puts "After first idempotent commit: #{db.count(TABLE)} rows"
 
 retry2 = db.begin_transaction
-retry2.put(TABLE, 1 => 4, 2 => "Dave", 3 => 60.0)
+retry2.put(TABLE, { 1 => 4, 2 => "Dave", 3 => 60.0 })
 retry2.commit(idempotency_key: "example-txn-key")
 puts "After duplicate idempotent commit (same key): #{db.count(TABLE)} rows (no double-apply)"
 
