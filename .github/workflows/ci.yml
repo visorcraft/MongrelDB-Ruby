@@ -79,12 +79,33 @@ jobs:
       - name: Run live tests
         run: bundle exec rake test
 
+      - name: Start mongreldb-server for examples
+        run: |
+          rm -rf /tmp/mongreldb-data-ex
+          ./bin/mongreldb-server /tmp/mongreldb-data-ex --port 8453 > /tmp/mongreldb-server-ex.log 2>&1 &
+          echo $! > /tmp/mongreldb-server-ex.pid
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8453/health >/dev/null 2>&1; then
+              echo "mongreldb-server is healthy for examples"
+              break
+            fi
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:8453/health >/dev/null || (cat /tmp/mongreldb-server-ex.log && exit 1)
+
       - name: Run examples
         run: |
           for ex in examples/*.rb; do
             echo "=== Running $ex ==="
             ruby -Ilib "$ex" || { echo "FAILED: $ex"; exit 1; }
           done
+
+      - name: Stop mongreldb-server for examples
+        if: always()
+        run: |
+          if [ -f /tmp/mongreldb-server-ex.pid ]; then
+            kill "$(cat /tmp/mongreldb-server-ex.pid)" 2>/dev/null || true
+          fi
 
       - name: Dump server log on failure
         if: failure()
