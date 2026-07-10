@@ -364,16 +364,19 @@ class MongrelDB::LiveFullLifecycleTest < MongrelDB::LiveTestCase
     name = unique_table("rb_txn_idem")
     fresh_table(name, int_col(1, "id", primary_key: true))
 
+    # Unique key per run so stale keys from prior runs don't replay.
+    idem_key = "order-100-create-#{Time.now.to_i}"
+
     txn = client.begin_transaction
     txn.put(name, {1 => 100})
-    results = txn.commit(idempotency_key: "order-100-create")
+    results = txn.commit(idempotency_key: idem_key)
     assert_equal 1, results.length
     assert_equal 1, client.count(name)
 
     # A second, identical idempotent commit must not create a duplicate row.
     txn2 = client.begin_transaction
     txn2.put(name, {1 => 100})
-    txn2.commit(idempotency_key: "order-100-create") rescue nil
+    txn2.commit(idempotency_key: idem_key) rescue nil
     assert_equal 1, client.count(name)
   end
 
