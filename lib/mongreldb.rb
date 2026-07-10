@@ -20,7 +20,7 @@ require_relative "mongreldb/transaction"
 #
 # Connect with a base URL and optional credentials:
 #
-#   db = MongrelDB::Client.new("http://127.0.0.1:8453")
+#   db = MongrelDB::Client.new(url: "http://127.0.0.1:8453")
 #   db.health  # => true
 #
 # See https://www.MongrelDB.com for the daemon and full documentation.

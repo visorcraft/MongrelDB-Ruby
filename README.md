@@ -72,7 +72,7 @@ Task-focused, commented guides live in [`docs/`](docs):
 require "mongreldb"
 
 # Connect to a running mongreldb-server daemon.
-db = MongrelDB::Client.new("http://127.0.0.1:8453")
+db = MongrelDB::Client.new(url: "http://127.0.0.1:8453")
 
 # Create a table. Column ids are stable on-wire identifiers.
 db.create_table("orders", [

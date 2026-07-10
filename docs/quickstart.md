@@ -82,7 +82,7 @@ Create `demo.rb`:
 require "mongreldb"
 
 # 1. Connect to the daemon. Empty/omitted URL falls back to http://127.0.0.1:8453.
-db = MongrelDB::Client.new("http://127.0.0.1:8453")
+db = MongrelDB::Client.new(url: "http://127.0.0.1:8453")
 
 # 2. Health check before doing anything else.
 unless db.health
