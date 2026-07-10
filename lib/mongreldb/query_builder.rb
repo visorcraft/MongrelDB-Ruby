@@ -133,7 +133,8 @@ module MongrelDB
     #
     # Type-specific aliases:
     #
-    #   fm_contains / fm_contains_all: value -> pattern
+    #   fm_contains:      value -> pattern
+    #   fm_contains_all:  value -> patterns
     #   (other types like pk/bitmap_eq use "value" as their canonical key, so
     #   the value->pattern alias must NOT apply globally)
     #
@@ -149,11 +150,14 @@ module MongrelDB
         "max_inclusive" => "hi_inclusive"
       }
 
-      # The docs historically used "value" for the FTS pattern; the server's
-      # fm_contains key is "pattern". Only apply this for FTS conditions, since
+      # The docs historically used "value" for the FTS pattern. The server's
+      # fm_contains key is "pattern" (singular), while fm_contains_all expects
+      # "patterns" (array). Only apply this for FTS conditions, since
       # pk/bitmap_eq use "value" canonically.
-      if type == "fm_contains" || type == "fm_contains_all"
+      if type == "fm_contains"
         aliases["value"] = "pattern"
+      elsif type == "fm_contains_all"
+        aliases["value"] = "patterns"
       end
 
       normalized = {}

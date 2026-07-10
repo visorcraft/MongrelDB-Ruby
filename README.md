@@ -247,7 +247,7 @@ end
 | `compact` → `Hash` | Compact all tables |
 | `compact_table(name)` → `Hash` | Compact one table |
 | `begin_transaction` → `Transaction` | Start a batch |
-| `get(path)`, `post(path, body)`, `delete(path)` → `Response` | Low-level HTTP (for endpoints not yet wrapped) |
+| `get(path)`, `post(path, body)`, `http_delete(path)` → `Response` | Low-level HTTP (for endpoints not yet wrapped) |
 
 ### `MongrelDB::QueryBuilder`
 

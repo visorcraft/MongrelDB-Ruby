@@ -28,8 +28,9 @@ every request.
 ```ruby
 db = MongrelDB::Client.new(url: "http://127.0.0.1:8453", token: "s3cret-token")
 
-ok = db.health
-puts "healthy: #{ok}"
+begin
+  ok = db.health
+  puts "healthy: #{ok}"
 rescue MongrelDB::AuthError
   abort "bad or missing token"
 end
