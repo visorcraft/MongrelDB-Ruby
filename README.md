@@ -88,9 +88,11 @@ db.put("orders", { 1 => 2, 2 => "Bob",   3 => 150.00 })
 # Upsert (insert or update on PK conflict).
 db.upsert("orders", { 1 => 1, 2 => "Alice", 3 => 120.00 }, update_cells: { 3 => 120.00 })
 
-# Query with a native index condition (learned-range index).
+# Query with a native index condition (learned-range index). amount is a
+# float64 column, so use the float range condition ("range_f64"), not "range"
+# (which targets i64 columns).
 rows = db.query("orders")
-  .where("range", "column" => 3, "min" => 100.0)
+  .where("range_f64", "column" => 3, "min" => 100.0)
   .projection([1, 2])
   .limit(100)
   .execute
@@ -151,9 +153,11 @@ accepted directly.
 # Bitmap equality (low-cardinality columns).
 db.query("orders").where("bitmap_eq", "column" => 2, "value" => "Alice").execute
 
-# Range query (learned-range index).
+# Range query on a float64 column (learned-range index). Use "range_f64" for
+# float64 columns and "range" for i64 columns.
 db.query("orders")
-  .where("range", "column" => 3, "min" => 50.0, "max" => 150.0)
+  .where("range_f64", "column" => 3, "min" => 50.0, "max" => 150.0,
+         "max_inclusive" => false)
   .limit(100).execute
 
 # Full-text search (FM-index).
@@ -167,7 +171,7 @@ db.query("embeddings")
   .execute
 
 # Check whether a result was capped by the limit.
-q = db.query("orders").where("range", "column" => 3, "min" => 0).limit(100)
+q = db.query("orders").where("range_f64", "column" => 3, "min" => 0).limit(100)
 rows = q.execute
 if q.truncated
   # result set hit the limit; more matches exist on the server

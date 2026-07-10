@@ -7,7 +7,7 @@ index; conditions are AND-ed together.
 
 ```ruby
 rows = db.query("orders")
-  .where("range", "column" => 3, "min" => 100.0, "max" => 500.0)
+  .where("range_f64", "column" => 3, "min" => 100.0, "max" => 500.0)
   .projection([1, 2])
   .limit(100)
   .execute
@@ -36,7 +36,7 @@ The request body produced by `build` matches the daemon's `/kit/query` shape:
 ```json
 {
   "table": "orders",
-  "conditions": [{"range": {"column_id": 3, "lo": 100.0, "hi": 500.0}}],
+  "conditions": [{"range_f64": {"column_id": 3, "lo": 100.0, "hi": 500.0, "lo_inclusive": true, "hi_inclusive": true}}],
   "projection": [1, 2],
   "limit": 100
 }
