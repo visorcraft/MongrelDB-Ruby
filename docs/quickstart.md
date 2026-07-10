@@ -144,7 +144,40 @@ total rows: 2
 | `.execute` | Sends the query and decodes the `rows` array. |
 | `db.count(table)` | GET `/tables/{name}/count`. |
 
-## 6. Common pitfalls
+## 6. Typed columns: enums and defaults
+
+The column hashes passed to `create_table` are forwarded to the daemon
+verbatim, so any column-level constraint the engine supports is just another
+key in the hash. Two useful ones:
+
+- `enum_variants` (`Array<String>`) - restricts an `enum` column to a fixed
+  set of string values. The engine rejects writes that fall outside the set.
+- `default_value` (`String`, `Integer`, etc.) - the value written into the
+  column when a row omits it. The engine-side default is applied before any
+  client-side default.
+
+```ruby
+db.create_table("orders", [
+  { "id" => 1, "name" => "id",     "ty" => "int64",   "primary_key" => true,  "nullable" => false },
+  { "id" => 2, "name" => "status", "ty" => "enum",
+    "enum_variants" => ["draft", "active", "archived"],
+    "default_value" => "draft",
+    "primary_key" => false, "nullable" => false },
+  { "id" => 3, "name" => "amount", "ty" => "float64",
+    "default_value" => 0,
+    "primary_key" => false, "nullable" => false },
+])
+
+# Omitting the status column falls back to the engine-side default ("draft").
+db.put("orders", { 1 => 1, 3 => 99.50 })
+```
+
+Keys that are not set on a column are omitted from the request body - no
+`null` placeholders are sent. The wire-shape conformance test at
+[`spec/create_table_wire_shape_spec.rb`](../spec/create_table_wire_shape_spec.rb)
+guards these keys against silent renames.
+
+## 7. Common pitfalls
 
 **Using the column name instead of the column id.** Every on-wire API uses the
 numeric `id` from `create_table`, never the `name`. The query builder's

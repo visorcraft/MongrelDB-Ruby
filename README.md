@@ -103,6 +103,38 @@ puts db.count("orders") # 2
 db.sql("UPDATE orders SET amount = 200.0 WHERE customer = 'Bob'")
 ```
 
+## Typed columns: enums and defaults
+
+The `columns` array passed to `create_table` is forwarded to the daemon
+verbatim, so any column-level constraints the engine supports are passed in
+the column hash. Two useful keys:
+
+- `enum_variants` (`Array<String>`) - restricts an `enum` column to a fixed set
+  of string values. The engine rejects writes that fall outside the set.
+- `default_value` (`String`, `Integer`, etc.) - the value written into the
+  column when a row omits it. The engine-side default is applied before any
+  client-side default.
+
+```ruby
+db.create_table("orders", [
+  { "id" => 1, "name" => "id",     "ty" => "int64",   "primary_key" => true,  "nullable" => false },
+  { "id" => 2, "name" => "status", "ty" => "enum",
+    "enum_variants" => ["draft", "active", "archived"],
+    "default_value" => "draft",
+    "nullable" => false },
+  { "id" => 3, "name" => "amount", "ty" => "float64", "default_value" => 0,
+    "primary_key" => false, "nullable" => false },
+])
+
+# Omitting the status column falls back to the engine-side default.
+db.put("orders", { 1 => 1, 3 => 99.50 })
+```
+
+Keys that are not set on a column are omitted from the request body - no
+`null` placeholders are sent. See
+[`spec/create_table_wire_shape_spec.rb`](spec/create_table_wire_shape_spec.rb)
+for the wire-shape conformance test that guards these keys.
+
 ## Authentication
 
 ```ruby

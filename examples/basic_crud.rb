@@ -28,20 +28,29 @@ end
 puts "Connected to MongrelDB"
 
 begin
-  # Create the table. Schema: id (int64 PK), name (varchar), score (float64).
+  # Create the table. Schema: id (int64 PK), role (enum with default), name
+  # (varchar), score (float64 with default). Column-level keys (enum_variants,
+  # default_value) are forwarded to the daemon verbatim - see
+  # spec/create_table_wire_shape_spec.rb for the wire-shape conformance test.
   tid = db.create_table(TABLE, [
     { "id" => 1, "name" => "id", "ty" => "int64", "primary_key" => true, "nullable" => false },
-    { "id" => 2, "name" => "name", "ty" => "varchar", "primary_key" => false, "nullable" => false },
-    { "id" => 3, "name" => "score", "ty" => "float64", "primary_key" => false, "nullable" => false },
+    { "id" => 2, "name" => "role", "ty" => "enum",
+      "enum_variants" => ["admin", "member", "guest"],
+      "default_value" => "member",
+      "primary_key" => false, "nullable" => false },
+    { "id" => 3, "name" => "name", "ty" => "varchar", "primary_key" => false, "nullable" => false },
+    { "id" => 4, "name" => "score", "ty" => "float64",
+      "default_value" => 0,
+      "primary_key" => false, "nullable" => false },
   ])
   puts "Created table #{TABLE} (id #{tid})"
 
   # Insert three rows. Cells map column id -> value. Wrap the cells in braces:
   # Client#put takes keyword args (idempotency_key:), and Ruby 3 treats a trailing
   # braceless hash ambiguously with keyword args.
-  db.put(TABLE, { 1 => 1, 2 => "Alice", 3 => 95.5 })
-  db.put(TABLE, { 1 => 2, 2 => "Bob", 3 => 82.0 })
-  db.put(TABLE, { 1 => 3, 2 => "Carol", 3 => 78.3 })
+  db.put(TABLE, { 1 => 1, 2 => "admin",  3 => "Alice", 4 => 95.5 })
+  db.put(TABLE, { 1 => 2, 3 => "Bob",   4 => 82.0 })  # role defaults to "member"
+  db.put(TABLE, { 1 => 3, 2 => "guest", 3 => "Carol", 4 => 78.3 })
   puts "Inserted 3 rows"
 
   puts "Total rows: #{db.count(TABLE)}"
@@ -51,9 +60,11 @@ begin
   puts "Query returned #{all.length} rows:"
   all.each { |row| puts "  #{row.inspect}" }
 
-  # Upsert (update) Alice's score. update_cells supplies the values written on a
-  # primary-key conflict.
-  db.upsert(TABLE, { 1 => 1, 2 => "Alice", 3 => 100.0 }, update_cells: { 2 => "Alice", 3 => 100.0 })
+  # Upsert (update) Alice's row. update_cells supplies the values written on a
+  # primary-key conflict. Score is bumped from 95.5 to 100.0; role and name
+  # are echoed back unchanged.
+  db.upsert(TABLE, { 1 => 1, 2 => "admin", 3 => "Alice", 4 => 100.0 },
+            update_cells: { 2 => "admin", 3 => "Alice", 4 => 100.0 })
   puts "Upserted Alice's score to 100.0"
   puts "Total rows after upsert: #{db.count(TABLE)}"
 
