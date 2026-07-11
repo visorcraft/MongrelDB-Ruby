@@ -154,9 +154,12 @@ module MongrelDB
     # @param name [String] Table name.
     # @param columns [Array<Hash>] Column definitions (keys +id+, +name+, +ty+,
     #   +primary_key+, +nullable+, ...).
+    # @param constraints [Hash, nil] Optional table constraints.
     # @return [Integer] The assigned table id.
-    def create_table(name, columns)
-      data = post("/kit/create_table", "name" => name, "columns" => columns).json
+    def create_table(name, columns, constraints: nil)
+      payload = { "name" => name, "columns" => columns }
+      payload["constraints"] = constraints if constraints
+      data = post("/kit/create_table", payload).json
       (data.is_a?(Hash) ? data["table_id"] : nil) || 0
     end
 

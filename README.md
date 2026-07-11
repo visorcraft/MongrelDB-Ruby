@@ -79,7 +79,13 @@ db.create_table("orders", [
   { "id" => 1, "name" => "id",       "ty" => "int64",   "primary_key" => true,  "nullable" => false },
   { "id" => 2, "name" => "customer", "ty" => "varchar", "primary_key" => false, "nullable" => false },
   { "id" => 3, "name" => "amount",   "ty" => "float64", "primary_key" => false, "nullable" => false },
-])
+], constraints: {
+  "checks" => [{
+    "id" => 1,
+    "name" => "ck_status",
+    "expr" => { "IsNotNull" => 2 },
+  }],
+})
 
 # Insert rows (cells map column id -> value).
 db.put("orders", { 1 => 1, 2 => "Alice", 3 => 99.50 })
@@ -269,7 +275,7 @@ end
 | `Client.new(url:, token:, username:, password:, open_timeout:, read_timeout:)` | Construct a client (`url` defaults to `http://127.0.0.1:8453`) |
 | `health` → `Boolean` | Check daemon health |
 | `table_names` → `Array<String>` | List table names |
-| `create_table(name, columns)` → `Integer` | Create a table; returns the table id |
+| `create_table(name, columns, constraints: nil)` → `Integer` | Create a table; returns the table id |
 | `drop_table(name)` → `nil` | Drop a table |
 | `count(table)` → `Integer` | Row count |
 | `put(table, cells, idempotency_key:)` → `Hash` | Insert a row |

@@ -62,14 +62,20 @@ describe MongrelDB::Client, "create_table wire shape" do
     refute_nil client.captured_body
   end
 
-  it "passes enum_variants and default_value through verbatim" do
+  it "passes column options and table checks through verbatim" do
     client.create_table("orders", [
       { "id" => 1, "name" => "id",     "ty" => "int64", "primary_key" => true, "nullable" => false },
       { "id" => 2, "name" => "status", "ty" => "enum",
         "enum_variants" => ["draft", "active", "archived"],
         "default_value" => "draft",
         "nullable" => false },
-    ])
+    ], constraints: {
+      "checks" => [{
+        "id" => 1,
+        "name" => "ck_status",
+        "expr" => { "IsNotNull" => 2 },
+      }],
+    })
 
     payload = JSON.parse(client.captured_body)
     status_col = payload["columns"].find { |c| c["name"] == "status" }
@@ -84,6 +90,8 @@ describe MongrelDB::Client, "create_table wire shape" do
     # string, not coerced to a number or symbol.
     assert_equal ["draft", "active", "archived"], status_col["enum_variants"]
     assert_equal "draft", status_col["default_value"]
+    assert_equal "ck_status", payload.dig("constraints", "checks", 0, "name")
+    assert_equal({ "IsNotNull" => 2 }, payload.dig("constraints", "checks", 0, "expr"))
   end
 
   it "omits enum_variants and default_value when not provided" do
