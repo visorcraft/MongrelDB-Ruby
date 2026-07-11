@@ -120,6 +120,7 @@ the column hash. Two useful keys:
 - `default_value` (`String`, `Integer`, etc.) - the value written into the
   column when a row omits it. The engine-side default is applied before any
   client-side default.
+- `default_expr` (`"now"` or `"uuid"`) - a dynamic server-side default.
 
 ```ruby
 db.create_table("orders", [
