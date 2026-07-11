@@ -487,6 +487,8 @@ module MongrelDB
     def throw_for_status(status, body)
       message, error_code, op_index = decode_error_envelope(body)
 
+      raise NotFoundError, message if message&.match?(/\Anot found:/i)
+
       case status
       when 401, 403
         raise AuthError, message_for(message, "Authentication failed (#{status})")
