@@ -366,6 +366,10 @@ Contributions are welcome. Please:
 3. Run `bundle exec rake test` before submitting.
 4. Keep the client dependency-free (standard library only at runtime).
 
+## History retention
+
+Use `history_retention_epochs`, `set_history_retention_epochs`, and `earliest_retained_epoch` with MongrelDB 0.47.1+.
+
 ## License
 
 Dual-licensed under the **MIT License** or the **Apache License, Version 2.0**,

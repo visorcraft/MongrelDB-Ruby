@@ -141,6 +141,18 @@ module MongrelDB
       false
     end
 
+    def history_retention_epochs
+      get("/history/retention").json.fetch("history_retention_epochs")
+    end
+
+    def earliest_retained_epoch
+      get("/history/retention").json.fetch("earliest_retained_epoch")
+    end
+
+    def set_history_retention_epochs(epochs)
+      request(Net::HTTP::Put, "/history/retention", { "history_retention_epochs" => epochs }).json
+    end
+
     # List all table names in the database.
     #
     # @return [Array<String>] Table names (empty array when none).
