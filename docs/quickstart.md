@@ -157,6 +157,10 @@ key in the hash. Two useful ones:
   client-side default.
 - `default_expr` (`"now"` or `"uuid"`) - a dynamic server-side default.
 
+Literal `"now"` and `"uuid"` strings are expressed through `default_value`
+like any other static string; use `default_expr` only when you want the dynamic
+server-side behavior.
+
 Supply `default_value` using the JSON scalar type expected by the column.
 
 ```ruby
@@ -180,7 +184,28 @@ Keys that are not set on a column are omitted from the request body - no
 [`spec/create_table_wire_shape_spec.rb`](../spec/create_table_wire_shape_spec.rb)
 guards these keys against silent renames.
 
-## 7. Common pitfalls
+## 7. History retention and time travel
+
+MongrelDB keeps a durable MVCC history window. You can inspect it, widen it,
+and query older epochs with `AS OF EPOCH`.
+
+```ruby
+puts db.history_retention_epochs   # current window, e.g. 100
+puts db.earliest_retained_epoch    # oldest readable epoch, e.g. 3
+
+# Widen the window. The response contains the updated values.
+resp = db.set_history_retention_epochs(1_000)
+puts resp["history_retention_epochs"]   # => 1000
+
+# Read the table as it existed at epoch 5.
+rows = db.sql("SELECT id, amount FROM orders AS OF EPOCH 5")
+```
+
+Increasing retention cannot restore history that has already been pruned. The
+window is a durable GC/time-travel policy, so it requires admin privileges when
+the daemon is running with auth.
+
+## 8. Common pitfalls
 
 **Using the column name instead of the column id.** Every on-wire API uses the
 numeric `id` from `create_table`, never the `name`. The query builder's

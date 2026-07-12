@@ -103,6 +103,12 @@ module MongrelDB
     # @return [String]
     attr_reader :base_url
 
+    # The commit epoch of the most recent successful +/kit/txn+ request made by
+    # this client, or +nil+ when no transaction has run yet. Useful for
+    # time-travel queries with +AS OF EPOCH+.
+    # @return [Integer, nil]
+    attr_reader :last_epoch
+
     # Create a new MongrelDB client.
     #
     # @param url [String] Daemon base URL (e.g. +http://127.0.0.1:8453+).
@@ -123,6 +129,7 @@ module MongrelDB
       @password = password
       @open_timeout = open_timeout
       @read_timeout = read_timeout
+      @last_epoch = nil
     end
 
     # True when a bearer token or basic-auth username is configured.
@@ -150,6 +157,7 @@ module MongrelDB
     end
 
     def set_history_retention_epochs(epochs)
+      validate_u64!(epochs, "epochs")
       request(Net::HTTP::Put, "/history/retention", { "history_retention_epochs" => epochs }).json
     end
 
@@ -340,7 +348,15 @@ module MongrelDB
 
       payload = { "ops" => ops }
       payload["idempotency_key"] = idempotency_key unless idempotency_key.nil? || idempotency_key.empty?
-      decode_results(post("/kit/txn", payload).body)
+      data = post("/kit/txn", payload).json
+      unless data.is_a?(Hash)
+        raise QueryError, "Malformed transaction response: expected JSON object"
+      end
+
+      results = data["results"]
+      results = [] unless results.is_a?(Array)
+      @last_epoch = data["epoch"] if data["epoch"].is_a?(Integer)
+      results
     end
 
     # ── Low-level HTTP ───────────────────────────────────────────────────────
@@ -472,15 +488,19 @@ module MongrelDB
       Client.flatten_cells(cells)
     end
 
-    # Decode the results array out of a +/kit/txn+ response.
-    def decode_results(body)
-      return [] if body.nil? || body.lstrip.empty?
+    # Validate a value intended for a server u64 field. Ruby integers are
+    # arbitrary precision, so we reject negative values, non-integers, and
+    # anything larger than u64::MAX rather than letting it round or fail later.
+    U64_MAX = 18_446_744_073_709_551_615
 
-      data = JSON.parse(body)
-      results = data.is_a?(Hash) ? data["results"] : nil
-      results.is_a?(Array) ? results : []
-    rescue JSON::ParserError => e
-      raise QueryError, "Failed to decode transaction response: #{e.message}"
+    def validate_u64!(value, name)
+      unless value.is_a?(Integer)
+        raise QueryError, "#{name} must be an integer"
+      end
+      raise QueryError, "#{name} must be non-negative" if value.negative?
+      return unless value > U64_MAX
+
+      raise QueryError, "#{name} exceeds maximum u64 value (#{U64_MAX})"
     end
 
     # Map the HTTP status code and body to the appropriate typed exception.

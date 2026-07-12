@@ -69,10 +69,12 @@ describe MongrelDB::Client, "create_table wire shape" do
         "enum_variants" => ["draft", "active", "archived"],
         "default_value" => "draft",
         "nullable" => false },
-      { "id" => 3, "name" => "retries", "ty" => "int64", "default_value" => 3 },
+      { "id" => 3, "name" => "retries", "ty" => "int64", "default_value" => 7 },
       { "id" => 4, "name" => "created_at", "ty" => "timestamp", "default_expr" => "now" },
       { "id" => 5, "name" => "enabled", "ty" => "bool", "default_value" => true },
       { "id" => 6, "name" => "optional", "ty" => "varchar", "default_value" => nil },
+      { "id" => 7, "name" => "now_literal", "ty" => "varchar", "default_value" => "now" },
+      { "id" => 8, "name" => "uuid_literal", "ty" => "varchar", "default_value" => "uuid" },
     ], constraints: {
       "checks" => [{
         "id" => 1,
@@ -94,10 +96,13 @@ describe MongrelDB::Client, "create_table wire shape" do
     # string, not coerced to a number or symbol.
     assert_equal ["draft", "active", "archived"], status_col["enum_variants"]
     assert_equal "draft", status_col["default_value"]
-    assert_equal 3, payload["columns"].find { |c| c["name"] == "retries" }["default_value"]
+    assert_equal 7, payload["columns"].find { |c| c["name"] == "retries" }["default_value"]
     assert_equal "now", payload["columns"].find { |c| c["name"] == "created_at" }["default_expr"]
+    refute payload["columns"].find { |c| c["name"] == "created_at" }.key?("default_value")
     assert_equal true, payload["columns"].find { |c| c["name"] == "enabled" }["default_value"]
     assert_nil payload["columns"].find { |c| c["name"] == "optional" }["default_value"]
+    assert_equal "now", payload["columns"].find { |c| c["name"] == "now_literal" }["default_value"]
+    assert_equal "uuid", payload["columns"].find { |c| c["name"] == "uuid_literal" }["default_value"]
     assert_equal "ck_status", payload.dig("constraints", "checks", 0, "name")
     assert_equal({ "IsNotNull" => 2 }, payload.dig("constraints", "checks", 0, "expr"))
   end

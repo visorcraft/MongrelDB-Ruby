@@ -25,3 +25,6 @@ pkg/
 
 # Prebuilt mongreldb-server binary (downloaded by CI / local testing, not source)
 bin/
+
+# Bundled gems installed with --path vendor/bundle
+vendor/

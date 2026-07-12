@@ -122,6 +122,10 @@ the column hash. Two useful keys:
   client-side default.
 - `default_expr` (`"now"` or `"uuid"`) - a dynamic server-side default.
 
+Literal `"now"` and `"uuid"` strings are expressed through `default_value`
+like any other static string; use `default_expr` only when you want the dynamic
+server-side behavior.
+
 ```ruby
 db.create_table("orders", [
   { "id" => 1, "name" => "id",     "ty" => "int64",   "primary_key" => true,  "nullable" => false },
@@ -289,6 +293,9 @@ end
 | `schema_for(table)` → `Hash` | Single-table descriptor |
 | `compact` → `Hash` | Compact all tables |
 | `compact_table(name)` → `Hash` | Compact one table |
+| `history_retention_epochs` → `Integer` | Current history-retention window |
+| `earliest_retained_epoch` → `Integer` | Oldest epoch still readable with `AS OF EPOCH` |
+| `set_history_retention_epochs(epochs)` → `Hash` | Set the durable MVCC window |
 | `begin_transaction` → `Transaction` | Start a batch |
 | `get(path)`, `post(path, body)`, `http_delete(path)` → `Response` | Low-level HTTP (for endpoints not yet wrapped) |
 
@@ -368,7 +375,25 @@ Contributions are welcome. Please:
 
 ## History retention
 
-Use `history_retention_epochs`, `set_history_retention_epochs`, and `earliest_retained_epoch` with MongrelDB 0.48.0+.
+Use `history_retention_epochs`, `set_history_retention_epochs`, and
+`earliest_retained_epoch` with MongrelDB 0.48.0+. The retention window controls
+how far back `AS OF EPOCH` time-travel queries can read; increasing it cannot
+bring back history that has already been pruned.
+
+```ruby
+# Inspect the current durable MVCC window.
+puts db.history_retention_epochs   # => 100
+puts db.earliest_retained_epoch    # => 3
+
+# Widen the window. The setter returns the updated response from the server.
+resp = db.set_history_retention_epochs(1_000)
+puts resp["history_retention_epochs"]   # => 1000
+puts resp["earliest_retained_epoch"]    # => 3
+
+# Query a past epoch. Columns omitted from the INSERT get their engine-side
+# defaults, and updates committed after the chosen epoch are not visible.
+rows = db.sql("SELECT id, amount FROM orders AS OF EPOCH 5")
+```
 
 ## License
 

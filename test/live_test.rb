@@ -188,6 +188,12 @@ module MongrelDB
           "primary_key" => false, "nullable" => false }
       end
 
+      # A typed varchar column descriptor.
+      def varchar_col(id, name)
+        { "id" => id, "name" => name, "ty" => "varchar",
+          "primary_key" => false, "nullable" => false }
+      end
+
       # Drop +name+ if present then create it with the given columns.
       def fresh_table(name, *columns)
         client.drop_table(name) rescue nil
@@ -463,6 +469,39 @@ class MongrelDB::LiveFullLifecycleTest < MongrelDB::LiveTestCase
     cols = desc["columns"]
     assert_kind_of Array, cols
     assert_equal 2, cols.length
+  end
+
+  def test_history_retention_setters_and_as_of_epoch
+    skip_if_no_client!
+
+    original = client.history_retention_epochs
+    assert_operator original, :>, 0
+
+    client.set_history_retention_epochs(1_000)
+    assert_equal 1_000, client.history_retention_epochs
+
+    name = unique_table("rb_retention")
+    fresh_table(name, int_col(1, "id", primary_key: true), float_col(2, "amount"))
+
+    client.put(name, { 1 => 1, 2 => 1.0 })
+    insert_epoch = client.last_epoch
+    assert_operator insert_epoch, :>, 0
+
+    # Update the row at a later epoch.
+    client.upsert(name, { 1 => 1, 2 => 9.0 }, update_cells: { 2 => 9.0 })
+
+    # The historical value at the insert epoch must still be readable.
+    rows = client.sql("SELECT id, amount FROM #{name} AS OF EPOCH #{insert_epoch}")
+    assert_equal 1, rows.length
+    assert_equal 1, rows.first["id"]
+    assert_equal 1.0, rows.first["amount"]
+
+    # The current value reflects the update.
+    current = client.sql("SELECT id, amount FROM #{name}")
+    assert_equal 1, current.length
+    assert_equal 9.0, current.first["amount"]
+  ensure
+    client.set_history_retention_epochs(original) if original.is_a?(Integer)
   end
 
   def test_compact_all_tables
