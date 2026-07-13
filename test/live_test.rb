@@ -722,7 +722,7 @@ class MongrelDB::QueryBuilderAliasTest < Minitest::Test
 
   def test_build_payload_shape
     c = MongrelDB::Client.new(url: "http://127.0.0.1:1")
-    q = c.query("orders").where("range", "column" => 3, "min" => 100).projection([1, 2]).limit(10)
+    q = c.query("orders").where("range", "column" => 3, "min" => 100).projection([1, 2]).limit(10).offset(12)
     payload = q.build
     assert_equal "orders", payload["table"]
     assert_kind_of Array, payload["conditions"]
@@ -730,6 +730,7 @@ class MongrelDB::QueryBuilderAliasTest < Minitest::Test
     assert_equal({ "column_id" => 3, "lo" => 100 }, payload["conditions"].first["range"])
     assert_equal [1, 2], payload["projection"]
     assert_equal 10, payload["limit"]
+    assert_equal 12, payload["offset"]
   end
 
   def test_build_omits_unset_fields

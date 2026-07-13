@@ -38,6 +38,7 @@ module MongrelDB
       @conditions = [] # each entry is {type => {normalized params}}
       @projection = nil
       @limit = nil
+      @offset = nil
       @last_truncated = false
     end
 
@@ -85,6 +86,12 @@ module MongrelDB
       self
     end
 
+    # Skip matching rows before applying the limit.
+    def offset(offset)
+      @offset = offset
+      self
+    end
+
     # Build the request payload that will be sent to +/kit/query+.
     #
     # @return [Hash{String=>Object}] The request payload.
@@ -94,6 +101,7 @@ module MongrelDB
       payload["conditions"] = @conditions unless @conditions.empty?
       payload["projection"] = @projection unless @projection.nil?
       payload["limit"] = @limit unless @limit.nil?
+      payload["offset"] = @offset unless @offset.nil?
       payload
     end
 
