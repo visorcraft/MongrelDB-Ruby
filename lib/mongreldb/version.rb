@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 module MongrelDB
-  VERSION = "0.52.3"
+  VERSION = "0.53.3"
 end
