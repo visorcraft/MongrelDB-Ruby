@@ -6,6 +6,7 @@ require "uri"
 
 require_relative "mongreldb/version"
 require_relative "mongreldb/query_builder"
+require_relative "mongreldb/search_builder"
 require_relative "mongreldb/transaction"
 
 # MongrelDB is the pure-Ruby HTTP client for a running `mongreldb-server`
@@ -266,6 +267,14 @@ module MongrelDB
     # @return [QueryBuilder]
     def query(table)
       QueryBuilder.new(self, table)
+    end
+
+    # Start a hybrid {SearchBuilder} against +table+ (POST +/kit/search+).
+    #
+    # @param table [String] Table name.
+    # @return [SearchBuilder]
+    def search(table)
+      SearchBuilder.new(self, table)
     end
 
     # ── SQL ──────────────────────────────────────────────────────────────────
