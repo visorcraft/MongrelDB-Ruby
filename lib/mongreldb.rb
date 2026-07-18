@@ -401,9 +401,14 @@ module MongrelDB
     # Convert a column-id-to-value map to the server's flat
     # +[col_id, value, col_id, value, ...]+ array. Pair order is not
     # significant -- each value is preceded by its own column id.
+    # Flatten a column-id-to-value map to the server's flat
+    # +[col_id, value, ...]+ array in ascending column-id order.
+    # Stable ordering is required for idempotency keys: the server hashes the
+    # request payload, and unordered Hash iteration would make two commits of
+    # the same cells look like a reuse mismatch.
     def self.flatten_cells(cells)
       flat = []
-      cells.each do |col_id, value|
+      cells.sort_by { |col_id, _| col_id.to_i }.each do |col_id, value|
         flat << col_id
         flat << value
       end
