@@ -41,12 +41,15 @@ jobs:
       - name: Run tests
         run: bundle exec rake test
 
+      - name: Run create-table wire-shape tests
+        run: ruby -Ilib spec/create_table_wire_shape_spec.rb
+
   live:
     # Boots a real mongreldb-server and runs the live round-trip suite.
     name: Live integration (against mongreldb-server)
     runs-on: ubuntu-latest
     env:
-      SERVER_VERSION: '0.62.0'
+      SERVER_VERSION: '0.63.0'
       # The test harness boots the daemon itself from ./bin/mongreldb-server.
       # MONGRELDB_SERVER points it at the downloaded binary.
       MONGRELDB_SERVER: ./bin/mongreldb-server

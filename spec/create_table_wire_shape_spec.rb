@@ -136,7 +136,10 @@ describe MongrelDB::Client, "create_table wire shape" do
       { "name" => "ann", "column_id" => 2, "kind" => "ann",
         "predicate" => "embedding IS NOT NULL",
         "options" => { "ann" => { "m" => 24, "ef_construction" => 96,
-                                    "ef_search" => 48, "quantization" => "dense" } } },
+                                    "ef_search" => 48, "quantization" => "dense",
+                                    "algorithm" => "diskann",
+                                    "diskann" => { "r" => 64, "l" => 128,
+                                                   "beam_width" => 8, "alpha" => 120 } } } },
       { "name" => "range", "column_id" => 1, "kind" => "learned_range" },
       { "name" => "minhash", "column_id" => 1, "kind" => "minhash" },
       { "name" => "sparse", "column_id" => 1, "kind" => "sparse" },
@@ -147,6 +150,8 @@ describe MongrelDB::Client, "create_table wire shape" do
     assert_equal %w[bitmap fm_index ann learned_range minhash sparse],
                  payload["indexes"].map { |index| index["kind"] }
     assert_equal "dense", payload.dig("indexes", 2, "options", "ann", "quantization")
+    assert_equal "diskann", payload.dig("indexes", 2, "options", "ann", "algorithm")
+    assert_equal 64, payload.dig("indexes", 2, "options", "ann", "diskann", "r")
     assert_equal "embedding IS NOT NULL", payload.dig("indexes", 2, "predicate")
   end
 end
