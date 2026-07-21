@@ -280,7 +280,7 @@ end
 | `Client.new(url:, token:, username:, password:, open_timeout:, read_timeout:)` | Construct a client (`url` defaults to `http://127.0.0.1:8453`) |
 | `health` → `Boolean` | Check daemon health |
 | `table_names` → `Array<String>` | List table names |
-| `create_table(name, columns, constraints: nil)` → `Integer` | Create a table; returns the table id |
+| `create_table(name, columns, constraints: nil, indexes: nil)` → `Integer` | Create a table with optional constraints and all index definitions |
 | `drop_table(name)` → `nil` | Drop a table |
 | `count(table)` → `Integer` | Row count |
 | `put(table, cells, idempotency_key:)` → `Hash` | Insert a row |
