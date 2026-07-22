@@ -8,6 +8,7 @@ require_relative "mongreldb/version"
 require_relative "mongreldb/query_builder"
 require_relative "mongreldb/search_builder"
 require_relative "mongreldb/transaction"
+require_relative "mongreldb/durable"
 
 # MongrelDB is the pure-Ruby HTTP client for a running `mongreldb-server`
 # daemon.
@@ -276,6 +277,46 @@ module MongrelDB
     # @return [SearchBuilder]
     def search(table)
       SearchBuilder.new(self, table)
+    end
+
+    # Text → embed → ANN retrieve (POST +/kit/retrieve_text+, 0.64+).
+    #
+    # @param table [String]
+    # @param embedding_column [Integer] column id
+    # @param text [String]
+    # @param k [Integer, nil]
+    # @return [Hash] +hits+ and +provenance+
+    def retrieve_text(table, embedding_column, text, k: nil, deadline_ms: nil, max_work: nil)
+      body = {
+        "table" => table,
+        "embedding_column" => Integer(embedding_column),
+        "text" => text
+      }
+      body["k"] = Integer(k) unless k.nil?
+      body["deadline_ms"] = Integer(deadline_ms) unless deadline_ms.nil?
+      body["max_work"] = Integer(max_work) unless max_work.nil?
+      data = post("/kit/retrieve_text", body).json
+      data.is_a?(Hash) ? data : { "hits" => [], "provenance" => {} }
+    end
+
+    # Retained SQL status for durable recovery (GET +/queries/{query_id}+).
+    #
+    # @param query_id [String]
+    # @return [QueryStatus]
+    def query_status(query_id)
+      data = get("/queries/#{URI.encode_www_form_component(query_id)}").json
+      raise QueryError, "query status response was not a JSON object" unless data.is_a?(Hash)
+
+      QueryStatus.new(data)
+    end
+
+    # Request cancellation of a running SQL query.
+    #
+    # @param query_id [String]
+    # @return [Hash]
+    def cancel_query(query_id)
+      data = post("/queries/#{URI.encode_www_form_component(query_id)}/cancel", {}).json
+      data.is_a?(Hash) ? data : {}
     end
 
     # ── SQL ──────────────────────────────────────────────────────────────────
