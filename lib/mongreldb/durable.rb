@@ -2,7 +2,9 @@
 
 module MongrelDB
   # Structural HLC from durable recovery (0.64+).
-  CommitHlc = Data.define(:physical_micros, :logical, :node_tiebreaker) do
+  # Struct (not Data.define) so the client stays loadable on Ruby 3.0, the
+  # supported minimum in the gemspec and CI matrix.
+  CommitHlc = Struct.new(:physical_micros, :logical, :node_tiebreaker, keyword_init: true) do
     def self.from_hash(raw)
       return nil if raw.nil? || !raw.is_a?(Hash) || raw["physical_micros"].nil?
 
@@ -15,7 +17,7 @@ module MongrelDB
   end
 
   # Nested durable recovery payload (server outcome / durable JSON).
-  DurableOutcome = Data.define(
+  DurableOutcome = Struct.new(
     :committed,
     :committed_statements,
     :last_commit_epoch,
@@ -27,7 +29,8 @@ module MongrelDB
     :statement_index,
     :serialization,
     :serialization_state,
-    :terminal_state
+    :terminal_state,
+    keyword_init: true
   ) do
     def self.from_hash(raw)
       raw = {} unless raw.is_a?(Hash)
