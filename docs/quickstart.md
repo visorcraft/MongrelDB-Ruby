@@ -62,16 +62,22 @@ Leave the daemon running for the rest of this guide.
 
 ## 3. Create a project and pull in the client
 
-```sh
-gem install mongreldb
-```
-
-Or add it to a Gemfile and run `bundle install`:
+The gem is not yet published to RubyGems, so install it from the git
+repository. Add it to a Gemfile and run `bundle install`:
 
 ```ruby
 # Gemfile
 source "https://rubygems.org"
-gem "mongreldb"
+gem "mongreldb", git: "https://github.com/visorcraft/MongrelDB-Ruby.git"
+```
+
+Or build and install from a clone:
+
+```sh
+git clone https://github.com/visorcraft/MongrelDB-Ruby.git
+cd MongrelDB-Ruby
+gem build mongreldb.gemspec
+gem install ./mongreldb-0.64.14.gem
 ```
 
 ## 4. Write your first program

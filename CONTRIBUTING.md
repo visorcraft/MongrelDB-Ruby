@@ -110,7 +110,7 @@ Live tests self-skip when no server binary is found.
 
 A useful bug report includes:
 
-- The MongrelDB Ruby client version (from `mongreldb.gemspec` / RubyGems).
+- The MongrelDB Ruby client version (from `mongreldb.gemspec`).
 - Your Ruby version (`ruby --version`) and OS.
 - The `mongreldb-server` version if the issue involves live requests.
 - The exact code or commands that reproduce the issue.
