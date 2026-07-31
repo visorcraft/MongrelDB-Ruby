@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://rubygems.org/gems/mongreldb"><img src="https://img.shields.io/gem/v/mongreldb.svg" alt="Gem Version" /></a>
+  <a href="https://github.com/visorcraft/MongrelDB-Ruby"><img src="https://img.shields.io/badge/install-git%20source-CC342D.svg" alt="Install from GitHub" /></a>
   <a href="https://www.ruby-lang.org/"><img src="https://img.shields.io/badge/Ruby-%3E%3D3.0-CC342D.svg" alt="Ruby" /></a>
   <a href="https://github.com/visorcraft/MongrelDB-Ruby/actions/workflows/ci.yml"><img src="https://github.com/visorcraft/MongrelDB-Ruby/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="#license"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg" alt="License" /></a>
@@ -21,7 +21,7 @@
 
 | Surface | Package | Install |
 |---|---|---|
-| Ruby client | `mongreldb` | `gem install mongreldb` |
+| Ruby client | `mongreldb` | Gemfile git source (see below) |
 
 ## Requirements
 
@@ -43,17 +43,23 @@
 
 ## Install
 
-```sh
-gem install mongreldb
-```
-
-Or add it to your Gemfile:
+The gem is not yet published to RubyGems, so install it from the git
+repository. Add it to your Gemfile:
 
 ```ruby
-gem "mongreldb"
+gem "mongreldb", git: "https://github.com/visorcraft/MongrelDB-Ruby.git"
 ```
 
 Then `bundle install`.
+
+Or build and install from a clone:
+
+```sh
+git clone https://github.com/visorcraft/MongrelDB-Ruby.git
+cd MongrelDB-Ruby
+gem build mongreldb.gemspec
+gem install ./mongreldb-0.64.14.gem
+```
 
 ## Examples
 
