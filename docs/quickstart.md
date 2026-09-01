@@ -77,7 +77,7 @@ Or build and install from a clone:
 git clone https://github.com/visorcraft/MongrelDB-Ruby.git
 cd MongrelDB-Ruby
 gem build mongreldb.gemspec
-gem install ./mongreldb-0.64.16.gem
+gem install ./mongreldb-0.64.17.gem
 ```
 
 ## 4. Write your first program
