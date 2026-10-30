@@ -31,7 +31,7 @@ Fetch a prebuilt server binary from the
 ```sh
 mkdir -p bin
 curl -fsSL -o bin/mongreldb-server \
-  https://github.com/visorcraft/MongrelDB/releases/download/v0.65.0/mongreldb-server-linux-x64
+  https://github.com/visorcraft/MongrelDB/releases/download/v0.65.1/mongreldb-server-linux-x64
 chmod +x bin/mongreldb-server
 ```
 
@@ -77,7 +77,7 @@ Or build and install from a clone:
 git clone https://github.com/visorcraft/MongrelDB-Ruby.git
 cd MongrelDB-Ruby
 gem build mongreldb.gemspec
-gem install ./mongreldb-0.65.0.gem
+gem install ./mongreldb-0.65.1.gem
 ```
 
 ## 4. Write your first program
